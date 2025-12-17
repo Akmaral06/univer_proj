@@ -3,6 +3,7 @@ package com.example.university.controller;
 import com.example.university.dto.TeacherDto;
 import com.example.university.service.TeacherService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,28 +16,33 @@ public class TeacherController {
     private final TeacherService service;
 
     @PostMapping
-    public TeacherDto create(@RequestBody TeacherDto dto) {
-        return service.create(dto);
+    public ResponseEntity<TeacherDto> create(@RequestBody TeacherDto dto) {
+        return ResponseEntity.ok(service.create(dto));
     }
 
     @GetMapping
-    public List<TeacherDto> getAll() {
-        return service.getAll();
+    public ResponseEntity<List<TeacherDto>> getAll() {
+        return ResponseEntity.ok(service.getAll());
     }
 
     @GetMapping("/{id}")
-    public TeacherDto getById(@PathVariable Long id) {
-        return service.getById(id);
+    public ResponseEntity<TeacherDto> getById(@PathVariable Long id) {
+        TeacherDto dto = service.getById(id);
+        return dto == null ? ResponseEntity.notFound().build()
+                : ResponseEntity.ok(dto);
     }
 
     @PutMapping("/{id}")
-    public TeacherDto update(@PathVariable Long id,
-                             @RequestBody TeacherDto dto) {
-        return service.update(id, dto);
+    public ResponseEntity<TeacherDto> update(@PathVariable Long id,
+                                             @RequestBody TeacherDto dto) {
+        TeacherDto updated = service.update(id, dto);
+        return updated == null ? ResponseEntity.notFound().build()
+                : ResponseEntity.ok(updated);
     }
 
     @DeleteMapping("/{id}")
-    public void delete(@PathVariable Long id) {
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
         service.delete(id);
+        return ResponseEntity.noContent().build();
     }
 }

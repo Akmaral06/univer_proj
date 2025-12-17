@@ -24,7 +24,8 @@ public class TeacherServiceImpl implements TeacherService {
 
     @Override
     public TeacherDto getById(Long id) {
-        return mapper.toDto(repository.findById(id).orElse(null));
+        Teacher teacher = repository.findById(id).orElse(null);
+        return teacher == null ? null : mapper.toDto(teacher);
     }
 
     @Override
@@ -42,6 +43,9 @@ public class TeacherServiceImpl implements TeacherService {
 
         teacher.setName(dto.getName());
         teacher.setDepartment(dto.getDepartment());
+
+        repository.save(teacher);
+
         return mapper.toDto(teacher);
     }
 

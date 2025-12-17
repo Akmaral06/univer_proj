@@ -13,7 +13,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -22,46 +21,35 @@ public class CourseServiceImpl implements CourseService {
     private final CourseRepository courseRepository;
     private final TeacherRepository teacherRepository;
     private final StudentRepository studentRepository;
-    private final CourseMapper mapper;
+    private final CourseMapper courseMapper;
 
     @Override
     public CourseDto create(CourseDto dto) {
-        Course course = mapper.toEntity(dto);
-        Teacher teacher = teacherRepository.findById(dto.getTeacherId()).orElse(null);
-        course.setTeacher(teacher);
-        return mapper.toDto(courseRepository.save(course));
+        Course course = courseMapper.toEntity(dto);
+
+        if (dto.getTeacherId() != null) {
+            Teacher teacher = teacherRepository
+                    .findById(dto.getTeacherId())
+                    .orElse(null);
+            course.setTeacher(teacher);
+        }
+
+        Course saved = courseRepository.save(course);
+        return courseMapper.toDto(saved);
     }
 
     @Override
     public CourseDto getById(Long id) {
-        Course course = courseRepository.findById(id).orElse(null);
-
-        if (course == null) {
-            return null;
-        }
-
-        CourseDto dto = mapper.toDto(course);
-
-        if (course.getTeacher() != null) {
-            dto.setTeacherId(course.getTeacher().getId());
-        }
-
-        dto.setStudentIds(
-                course.getStudents()
-                        .stream()
-                        .map(student -> student.getId())
-                        .collect(Collectors.toSet())
-        );
-
-        return dto;
+        return courseRepository.findById(id)
+                .map(courseMapper::toDto)
+                .orElse(null);
     }
-
 
     @Override
     public List<CourseDto> getAll() {
         return courseRepository.findAll()
                 .stream()
-                .map(mapper::toDto)
+                .map(courseMapper::toDto)
                 .toList();
     }
 
@@ -73,10 +61,17 @@ public class CourseServiceImpl implements CourseService {
         course.setTitle(dto.getTitle());
         course.setCredits(dto.getCredits());
 
-        Teacher teacher = teacherRepository.findById(dto.getTeacherId()).orElse(null);
-        course.setTeacher(teacher);
+        if (dto.getTeacherId() != null) {
+            Teacher teacher = teacherRepository
+                    .findById(dto.getTeacherId())
+                    .orElse(null);
+            course.setTeacher(teacher);
+        } else {
+            course.setTeacher(null);
+        }
 
-        return mapper.toDto(course);
+        Course saved = courseRepository.save(course);
+        return courseMapper.toDto(saved);
     }
 
     @Override
@@ -89,11 +84,12 @@ public class CourseServiceImpl implements CourseService {
         Course course = courseRepository.findById(courseId).orElse(null);
         Student student = studentRepository.findById(studentId).orElse(null);
 
-        if (course != null && student != null) {
-            course.getStudents().add(student);
-            student.getCourses().add(course);
-        }
-        return mapper.toDto(course);
+        if (course == null || student == null) return null;
+
+        student.getCourses().add(course);
+        studentRepository.save(student);
+
+        return courseMapper.toDto(course);
     }
 
     @Override
@@ -101,10 +97,11 @@ public class CourseServiceImpl implements CourseService {
         Course course = courseRepository.findById(courseId).orElse(null);
         Student student = studentRepository.findById(studentId).orElse(null);
 
-        if (course != null && student != null) {
-            course.getStudents().remove(student);
-            student.getCourses().remove(course);
-        }
-        return mapper.toDto(course);
+        if (course == null || student == null) return null;
+
+        student.getCourses().remove(course);
+        studentRepository.save(student);
+
+        return courseMapper.toDto(course);
     }
 }
