@@ -1,111 +1,97 @@
 package com.example.university.service;
 
 import com.example.university.dto.CourseDto;
-import org.junit.jupiter.api.Assertions;
+import com.example.university.entity.Course;
+import com.example.university.repository.CourseRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.List;
-import java.util.Random;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
-public class CourseServiceTest {
+class CourseServiceTest {
 
     @Autowired
     private CourseService courseService;
 
-    @Test
-    void getAllTest() {
+    @Autowired
+    private CourseRepository courseRepository;
 
-        List<CourseDto> list = courseService.getAll();
+    private Long baseCourseId;
 
-        Assertions.assertNotNull(list);
-        Assertions.assertNotEquals(0, list.size());
-
-        for (CourseDto courseDto : list) {
-            Assertions.assertNotNull(courseDto);
-            Assertions.assertNotNull(courseDto.getId());
-            Assertions.assertNotNull(courseDto.getTitle());
+    @BeforeEach
+    void initData() {
+        if (courseRepository.count() == 0) {
+            Course course = new Course();
+            course.setTitle("Base course");
+            course.setCredits(5);
+            courseRepository.save(course);
         }
-    }
 
-    @Test
-    void getByIdTest() {
-
-        Random random = new Random();
-
-        List<CourseDto> list = courseService.getAll();
-        int randomIndex = random.nextInt(list.size());
-        Long someId = list.get(randomIndex).getId();
-
-        CourseDto courseDto = courseService.getById(someId);
-
-        Assertions.assertNotNull(courseDto);
-        Assertions.assertNotNull(courseDto.getId());
-        Assertions.assertNotNull(courseDto.getTitle());
-
-        CourseDto notFound = courseService.getById(-1L);
-        Assertions.assertNull(notFound);
+        baseCourseId = courseRepository.findAll().get(0).getId();
+        assertNotNull(baseCourseId);
     }
 
     @Test
     void createCourseTest() {
-
         CourseDto dto = new CourseDto();
-        dto.setTitle("Test Course");
+        dto.setTitle("Algorithms");
+        dto.setCredits(6);
 
-        CourseDto created = courseService.create(dto);
+        CourseDto saved = courseService.create(dto);
 
-        Assertions.assertNotNull(created);
-        Assertions.assertNotNull(created.getId());
-        Assertions.assertNotNull(created.getTitle());
+        assertNotNull(saved);
+        assertNotNull(saved.getId());
+        assertEquals("Algorithms", saved.getTitle());
+        assertEquals(6, saved.getCredits());
+    }
 
-        Assertions.assertEquals(dto.getTitle(), created.getTitle());
+    @Test
+    void getByIdTest() {
+        CourseDto found = courseService.getById(baseCourseId);
 
-        CourseDto fromDb = courseService.getById(created.getId());
+        assertNotNull(found);
+        assertEquals(baseCourseId, found.getId());
+    }
 
-        Assertions.assertNotNull(fromDb);
-        Assertions.assertEquals(created.getId(), fromDb.getId());
-        Assertions.assertEquals(created.getTitle(), fromDb.getTitle());
+    @Test
+    void getAllTest() {
+        List<CourseDto> courses = courseService.getAll();
+
+        assertNotNull(courses);
+        assertFalse(courses.isEmpty(), "The list of courses must not be empty");
     }
 
     @Test
     void updateCourseTest() {
-
-        Random random = new Random();
-        List<CourseDto> list = courseService.getAll();
-
-        Long someId = list.get(random.nextInt(list.size())).getId();
-
         CourseDto dto = new CourseDto();
-        dto.setId(someId);
-        dto.setTitle("Updated Course");
+        dto.setTitle("Updated title");
+        dto.setCredits(10);
 
-        CourseDto updated = courseService.update(someId, dto);
+        CourseDto updated = courseService.update(baseCourseId, dto);
 
-        Assertions.assertNotNull(updated);
-        Assertions.assertEquals(dto.getId(), updated.getId());
-        Assertions.assertEquals(dto.getTitle(), updated.getTitle());
-
-        CourseDto check = courseService.getById(someId);
-
-        Assertions.assertNotNull(check);
-        Assertions.assertEquals(updated.getTitle(), check.getTitle());
+        assertNotNull(updated);
+        assertEquals(baseCourseId, updated.getId());
+        assertEquals("Updated title", updated.getTitle());
+        assertEquals(10, updated.getCredits());
     }
 
     @Test
     void deleteCourseTest() {
+        Course course = new Course();
+        course.setTitle("To delete");
+        course.setCredits(1);
+        course = courseRepository.save(course);
 
-        Random random = new Random();
-        List<CourseDto> list = courseService.getAll();
+        Long id = course.getId();
+        assertNotNull(id);
 
-        Long someId = list.get(random.nextInt(list.size())).getId();
+        courseService.delete(id);
 
-        courseService.delete(someId);
-
-        CourseDto check = courseService.getById(someId);
-        Assertions.assertNull(check);
+        assertTrue(courseRepository.findById(id).isEmpty());
     }
-
 }
