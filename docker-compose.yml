@@ -1,16 +1,24 @@
 services:
-  db:
-    image: postgres:18
-    container_name: postgres_db
-    restart: always
+  spring-project:
+    build: .
+    container_name: "spring-project111"
+    depends_on:
+      - database-service
     environment:
-      POSTGRES_DB: fin
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres123
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://database-service:5432/final_project_db
+      - SPRING_DATASOURCE_USER=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres123
+      - SPRING_HIBERNATE_JPA_DDL_AUTO=update
+      - SPRING_JPA_SHOW_SQL=true
     ports:
-      - "5433:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql
+      - 8888:8080
 
-volumes:
-  postgres_data:
+  database-service:
+    image: 'postgres'
+    container_name: 'database-service'
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres123
+      - POSTGRES_DB=postgres
+    ports:
+      - 2345:5432
