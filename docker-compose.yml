@@ -19,6 +19,6 @@ services:
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres123
-      - POSTGRES_DB=postgres
+      - POSTGRES_DB=final_project_db
     ports:
       - 2345:5432
