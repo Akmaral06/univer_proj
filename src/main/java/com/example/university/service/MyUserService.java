@@ -18,7 +18,7 @@ public class MyUserService implements UserDetailsService {
         return User.builder()
                 .username("admin")
                 // пароль: admin
-                .password("$2a$10$7QJm9Qy0Hq0zX6vGQ8dGXeZQm1jP7u8cY6Z0k8wE1G1lZ3pJq")
+                .password("$2a$10$0gQs93xrC3EG79UhusGUJeBPFRRYXplMPJrSjfe4jV5U4Stw9izoi")
                 .roles("ADMIN")
                 .build();
     }
